@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import grp
+import os
 import pwd
 import sys
 
@@ -33,6 +34,8 @@ if __name__ == "__main__":
         help="User(s) to be add to the group",
     )
     args = parser.parse_args()
+
+    executed_by = os.getenv("USER")
 
     exist_users = []
     miss = False
