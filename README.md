@@ -48,3 +48,6 @@ rc_rmq.start_consume({
 # don't forget to close connection
 rc_rmq.disconnect()
 ```
+
+### Account creation flowchart
+![Account creation flowchart](./account-creation-flow.png)
