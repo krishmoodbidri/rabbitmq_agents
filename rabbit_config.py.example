@@ -4,3 +4,55 @@ Password = 'CHANGE_IT_TO_YOUR_OWN_PASSWORD'
 VHost = '/'
 Server = 'ohpc'
 Port = 5672
+
+Valid_state = ["ok", "blocked", "certification"]
+
+# Default function timeout
+Function_timeout = 30
+
+# time delay to let account creation finish
+# to avoid concurrency with downstream agents
+Delay = 5
+
+# dir_verify agent config
+User_dirs = ['/home', '/data/user', '/data/scratch']
+
+# git_commit agent config
+rc_users_ldap_repo_loc = "~/git/rc-users"
+db_path = ".agent_db"
+
+# Config related to email
+Mail_server = 'localhost'
+Admin_email = 'root@localhost'
+Sender = 'ROOT@LOCALHOST'
+Sender_notification = 'NOTIFY@LOCALHOST'
+Sender_subscription = 'SUBSCRIBE_EMAIL@LOCALHOST'
+Sender_alias = 'Services'
+Subject = 'New User Account'
+Info_url = 'https://www.google.com'
+Mail_list = 'root@localhost'
+Mail_list_bcc = 'cmsupport@localhost'
+Support_email = 'support@listserv.uab.edu'
+
+Head = f"""From: {Sender_alias} <{Sender}>
+To: <{{{{ to }}}}>
+Subject: {Subject}
+"""
+
+Body = f"""
+Hi {{{{ username }}}}
+Your account has been set up with:
+
+============================
+User ID:  {{{{ username }}}}
+============================
+
+If you have any questions, please visit:
+{Info_url}
+
+or email at {Admin_email}
+
+Cheers,
+"""
+
+Whole_mail = Head + Body
