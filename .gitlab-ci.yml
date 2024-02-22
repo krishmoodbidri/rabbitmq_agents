@@ -1,2 +1,6 @@
 include:
   - template: Code-Quality.gitlab-ci.yml
+
+code_quality:
+  tags:
+    - dind
