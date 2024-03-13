@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-import os
 import json
 import pika
 import shlex
 import rc_util
 from subprocess import Popen,PIPE
-from pathlib import Path
 from rc_rmq import RCRMQ
 import rabbit_config as rcfg
 
@@ -21,9 +19,7 @@ rc_rmq = RCRMQ({"exchange": rcfg.Exchange, "exchange_type": "topic"})
 def group_member(ch, method, properties, body):
     msg = json.loads(body)
     username = msg["username"]
-    action = msg["action"]
     msg["task"] = task
-    state = msg["state"]
 
     try:
         if 'remove' in msg["groups"]:
