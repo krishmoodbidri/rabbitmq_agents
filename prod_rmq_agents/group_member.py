@@ -43,6 +43,25 @@ def insert_db(operation, groupname, msg):
 
 
 def group_member(ch, method, properties, body):
+    """
+    Properties:
+      correlation_id (str): The UUID for the request.
+      reply_to       (str): The RabbitMQ queue name for reply to send to.
+
+    Message(body):
+      username    (str): The user to be added/removed from groups.
+      groups     (dict): A dictionary with `add` or `remove` key.
+        add      (list): A list of groups to be added for the user.
+        remove   (list): A list of groups to be removed for the user.
+      executed_by (str): The user who request the change.
+      host        (str): Hostname where the request comes from.
+      interface   (str): whether it's from CLI or WebUI.
+
+    Returns:
+      status (bool): Whether or not the operation executed successfully.
+      errmsg  (str): Detailed error message if operation failed.
+      task    (str): The task name of the agent who handle the message.
+    """
     msg = json.loads(body)
     username = msg["username"]
     msg["task"] = task
