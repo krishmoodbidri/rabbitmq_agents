@@ -1,8 +1,10 @@
 #!/usr/bin/env python
+import dataset
 import json
 import pika
 import shlex
 import rc_util
+from datetime import datetime
 from subprocess import Popen, PIPE
 from rc_rmq import RCRMQ
 import rabbit_config as rcfg
@@ -12,8 +14,32 @@ task = "group_member"
 args = rc_util.get_args()
 logger = rc_util.get_logger(args)
 
+# Initialize db
+db = dataset.connect(f"sqlite:///{rcfg.db_path}/user_reg.db")
+table = db["groups"]
+
 # Instantiate rabbitmq object
 rc_rmq = RCRMQ({"exchange": rcfg.Exchange, "exchange_type": "topic"})
+
+
+def insert_db(operation, groupname, msg):
+    if operation == "remove":
+        op = 0
+    elif operation == "add":
+        op = 1
+
+    # SQL insert
+    table.insert(
+        {
+            "user": msg["username"],
+            "group": groupname,
+            "operation": op,
+            "date": datetime.now(),
+            "host": msg["host"],
+            "executed_by": msg["executed_by"],
+            "interface": msg["interface"],
+        }
+    )
 
 
 def group_member(ch, method, properties, body):
@@ -47,6 +73,7 @@ def group_member(ch, method, properties, body):
                 logger.info(
                     f"User {username} is removed from {each_group} group"
                 )
+                insert_db("remove", each_group, msg)
 
         if "add" in msg["groups"]:
             for each_group in msg["groups"]["add"]:
@@ -69,6 +96,7 @@ def group_member(ch, method, properties, body):
                 out, err = proc.communicate()
                 logger.debug(f"Result: {err}")
                 logger.info(f"User {username} is added to {each_group} group")
+                insert_db("add", each_group, msg)
 
         msg["success"] = True
 
