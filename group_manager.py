@@ -57,7 +57,7 @@ def manage_group(op, usernames, groupname, debug=False):
             status[username] = msg["success"]
             response += 1
             if not msg["success"]:
-                print("Something's wrong, please try again.")
+                print(f"{username}: Something's wrong, please try again.")
 
         if len(status) == response:
             rc_rmq.stop_consume()
@@ -92,6 +92,8 @@ def manage_group(op, usernames, groupname, debug=False):
             "cb": handler,
         }
     )
+
+    print("Done")
 
 
 if __name__ == "__main__":
