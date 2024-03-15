@@ -2,14 +2,13 @@
 import argparse
 import grp
 import json
-import os
 import pika
 import pwd
 import rabbit_config as rcfg
 import sys
 import uuid
 from rc_rmq import RCRMQ
-from rc_util import timeout
+from rc_util import get_caller_info, timeout
 
 
 # Instantiate rabbitmq object
@@ -39,6 +38,9 @@ def manage_group(op, usernames, groupname, debug=False):
     corr_id = str(uuid.uuid4())
     status = dict.fromkeys(usernames, False)
     response = 0
+
+    interface = "CLI"
+    executed_by, host = get_caller_info()
 
     def handler(ch, method, properties, body):
         if debug:
@@ -75,6 +77,9 @@ def manage_group(op, usernames, groupname, debug=False):
                 "msg": {
                     "groups": {f"{op}": [f"{groupname}"]},
                     "username": user,
+                    "host": host,
+                    "executed_by": executed_by,
+                    "interface": interface,
                 },
             }
         )
@@ -108,8 +113,6 @@ if __name__ == "__main__":
         help="User(s) to be add to the group",
     )
     args = parser.parse_args()
-
-    executed_by = os.getenv("USER")
 
     exist_users = []
     miss = False
