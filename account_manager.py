@@ -48,6 +48,7 @@ msg["state"] = state
 msg["service"] = service
 msg["queuename"] = queuename
 msg["updated_by"], msg["host"] = rc_util.get_caller_info()
+msg["interface"] = "CLI"
 
 # publish msg with acctmgr.{uname} routing key.
 rc_rmq.publish_msg(
