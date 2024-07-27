@@ -40,7 +40,7 @@ def manage_group(op, usernames, groupname, debug=False):
     response = 0
 
     interface = "CLI"
-    executed_by, host = get_caller_info()
+    updated_by, host = get_caller_info()
 
     def handler(ch, method, properties, body):
         if debug:
@@ -78,7 +78,7 @@ def manage_group(op, usernames, groupname, debug=False):
                     "groups": {f"{op}": [f"{groupname}"]},
                     "username": user,
                     "host": host,
-                    "executed_by": executed_by,
+                    "updated_by": updated_by,
                     "interface": interface,
                 },
             }
