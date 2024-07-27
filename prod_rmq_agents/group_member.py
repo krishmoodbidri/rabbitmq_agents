@@ -37,7 +37,7 @@ def insert_db(operation, groupname, msg):
             "date": datetime.now(),
             "host": msg["host"],
             "updated_by": msg["updated_by"],
-            "interface": msg["interface"],
+            "interface": msg.get("interface", ""),
         }
     )
 
