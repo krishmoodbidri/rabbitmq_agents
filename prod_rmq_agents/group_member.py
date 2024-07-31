@@ -36,8 +36,8 @@ def insert_db(operation, groupname, msg):
             "operation": op,
             "date": datetime.now(),
             "host": msg["host"],
-            "executed_by": msg["executed_by"],
-            "interface": msg["interface"],
+            "updated_by": msg["updated_by"],
+            "interface": msg.get("interface", ""),
         }
     )
 
@@ -53,7 +53,7 @@ def group_member(ch, method, properties, body):
       groups     (dict): A dictionary with `add` or `remove` key.
         add      (list): A list of groups to be added for the user.
         remove   (list): A list of groups to be removed for the user.
-      executed_by (str): The user who request the change.
+      updated_by  (str): The user who request the change.
       host        (str): Hostname where the request comes from.
       interface   (str): whether it's from CLI or WebUI.
 
