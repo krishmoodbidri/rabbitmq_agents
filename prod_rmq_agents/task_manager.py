@@ -266,7 +266,7 @@ def task_manager(ch, method, properties, body):
         # Send trigger message
         rc_rmq.publish_msg({"routing_key": routing_key, "msg": message})
 
-        if task_name == "create_account" and success:
+        if task_name == "create_account" and success and rcfg.default_groups:
             rc_rmq.publish_msg(
                 {
                     "routing_key": "group_member.add",
