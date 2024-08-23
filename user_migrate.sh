@@ -2,7 +2,6 @@
 
 user=$1
 group_to=$2
-rc=0
 
 if [[ -z "${group_to}" ]]; then
   echo "Usage: $0 USER TARGET_GROUP"
@@ -22,7 +21,6 @@ fi
 cd /cm/shared/rabbitmq_agents || exit
 source venv/bin/activate
 
-./account_manager.py "$user" hold
 
 if [[ "$group_to" == "gpfs4" ]]; then
   group_from=gpfs5
@@ -31,14 +29,15 @@ else
 fi
 
 if [[ -d "/$group_from/data/user/home/$user" ]]; then
+  ./account_manager.py "$user" hold
+
   rsync -a --delete "/$group_from/data/user/home/$user/" "/$group_to/data/user/home/$user"
 
   ./group_manager.py "$user" -g "$group_to"
   ./group_manager.py "$user" -d -g "$group_from"
+
+  ./account_manager.py "$user" ok
 else
   echo User home directory does not exist.
-  rc=1
+  exit 1
 fi
-
-./account_manager.py "$user" ok
-exit $rc
