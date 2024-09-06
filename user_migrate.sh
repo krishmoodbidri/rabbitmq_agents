@@ -1,6 +1,8 @@
 #!/bin/bash
 
 group_options=(gpfs4 gpfs5)
+gpfs4_home="/gpfs4/data/user/home"
+gpfs5_home="/gpfs5/data/user/home"
 
 user=$1
 group_to=$2
@@ -26,14 +28,18 @@ source venv/bin/activate
 
 if [[ "$group_to" == "gpfs4" ]]; then
   group_from=gpfs5
+  dir_from="$gpfs5_home/$user/"
+  dir_to="$gpfs4_home/$user"
 else
   group_from=gpfs4
+  dir_from="$gpfs4_home/$user/"
+  dir_to="$gpfs5_home/$user"
 fi
 
 if [[ -d "/$group_from/data/user/home/$user" ]]; then
   ./account_manager.py "$user" hold
 
-  rsync -a --delete "/$group_from/data/user/home/$user/" "/$group_to/data/user/home/$user"
+  rsync -a --delete "$dir_from" "$dir_to"
 
   ./group_manager.py "$user" -g "$group_to"
   ./group_manager.py "$user" -d -g "$group_from"
