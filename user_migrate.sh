@@ -1,13 +1,16 @@
 #!/bin/bash
 
+group_options=(gpfs4 gpfs5)
+
 user=$1
 group_to=$2
 
 if [[ -z "${group_to}" ]]; then
   echo "Usage: $0 USER TARGET_GROUP"
   exit 1
-elif [[ "${group_to}" != "gpfs4" && "${group_to}" != "gpfs5" ]]; then
-  echo "Target group should be \"gpfs4\" or \"gpfs5\", got \"${group_to}\"."
+elif [[ ! " ${group_options[*]} " =~ [[:space:]]${group_to}[[:space:]] ]]; then
+  echo "Invalid target group"
+  echo "Available options: ${group_options[*]}, got ${group_to}"
   exit 1
 fi
 
@@ -20,7 +23,6 @@ fi
 
 cd /cm/shared/rabbitmq_agents || exit
 source venv/bin/activate
-
 
 if [[ "$group_to" == "gpfs4" ]]; then
   group_from=gpfs5
