@@ -16,9 +16,7 @@ elif [[ ! " ${group_options[*]} " =~ [[:space:]]${group_to}[[:space:]] ]]; then
   exit 1
 fi
 
-getent passwd "$user" > /dev/null 2&>1
-
-if [[ $? -ne 0 ]]; then
+if ! getent passwd "$user" > /dev/null 2>&1; then
   echo "The user $user does not exist"
   exit 1
 fi
