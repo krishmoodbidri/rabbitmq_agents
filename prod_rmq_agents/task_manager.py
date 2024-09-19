@@ -266,13 +266,25 @@ def task_manager(ch, method, properties, body):
         # Send trigger message
         rc_rmq.publish_msg({"routing_key": routing_key, "msg": message})
 
+        if task_name == "create_account" and success and rcfg.default_groups:
+            rc_rmq.publish_msg(
+                {
+                    "routing_key": "group_member.add",
+                    "msg": {
+                        "groups": {"add": rcfg.default_groups},
+                        "username": username,
+                        "host": msg.get("host"),
+                        "updated_by": msg.get("updated_by"),
+                        "interface": msg.get("interface"),
+                    },
+                }
+            )
         logger.debug(f"Trigger message '{routing_key}' sent")
 
         logger.debug("Previous level messages acknowledged")
 
     # Send report to admin
     if completed or terminated:
-
         notify_admin(username, current)
 
         update_db(username, {"reported": True})
@@ -295,7 +307,6 @@ def timeout_handler(signum, frame):
         delta = current_time - tracking[user]["last_update"]
 
         if delta.seconds > timeout:
-
             rc_rmq.publish_msg(
                 {
                     "routing_key": "complete." + user,
