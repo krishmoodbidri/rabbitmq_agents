@@ -1,53 +1,115 @@
-# rabbitmq_agents
 
-This repo keeps different rabbitmq agents that help in account creation on OHPC system.
+# RabbitMQ User Registration Agents 
 
-It has 2 branches ```develop``` and ```production``` , that houses agents based on where they are launched
+---
 
-## Using RCRMQ class
+## Overview
+This project automates user registration workflows at UAB using **RabbitMQ** to route tasks between systems like the web interface, CLI tools, databases, and email services. It ensures tasks like assigning user IDs, validating data, and sending notifications happen in sequence without manual intervention.  
 
-- First, rename `rabbit_config.py.example` to `rabbit_config.py`
+---
 
-- Modify config file, at least the `Password` needs to be your own passwod
+## Key Components 
+### 1. **The `RegUsr` Exchange** 
+- **Type**: Topic exchange (routes messages using `routing_key` patterns).  
+- **Purpose**: Acts as the central hub for all registration-related messages.  
 
-- In your code:
+### 2. **Core Scripts** 
+- **`self_reg_app` (Web UI)**: Starts the process by sending a `request<queuename>` message with user data.  
+- **`create_account.py` (CLI)**: Triggers backend tasks (e.g., UID/GID assignment, email subscriptions).  
 
-```
-# import the class
-from rc_rmq import RCRMQ
+### 3. **Queues & Their Jobs** 
+| Queue Name               | What It Does                                                                 |  
+|--------------------------|-----------------------------------------------------------------------------|  
+| `get next uid gid`        | Reserves a unique UID/GID for the user (uses SQLite to track IDs).          |  
+| `subscribe mail list`     | Adds the user’s email to mailing lists (e.g., department announcements).    |  
+| `git commit`              | Logs configuration changes to Git (e.g., new user added).                   |  
+| `notify user`             | Sends emails/SMS to users (e.g., "Your account is ready").                  |  
+| `task_manager`            | Coordinates tasks like retrying failed steps or updating logs.              |  
 
-# instantiate an instance
-rc_rmq = RCRMQ({'exchange': 'RegUsr'})
+### 4. **Data Flow** 
+1. A user submits details via the **Web UI** (`self_reg_app`).  
+2. A `request<queuename>` message is sent to `RegUsr` with fields:  
+   ```json  
+   { "username", "queuename", "email", "fullname", "reason" }  
 
-# publish a message to message queue
-rc_rmq.publish_msg({
-  'routing_key': 'your_key',
-  'msg': {
-    'type': 'warning',
-    'content': 'this is warning'
-  }
-})
+3.  The system:
+    
+    -   Assigns UID/GID via SQLite (`get next uid gid`  queue).
+        
+    -   Validates data with a  `verify<queuename>`  message.
+        
+    -   Sends a  `completed<queuename>`  message with success/failure status.
+        
+    -   Notifies the user and logs the event.
+        
 
-# to consume message from a queue
-# you have to first define callback function
-# with parameters: channel, method, properties, body
-def callback_function(ch, method, properties, body):
-  msg = json.loads(body)
-  print("get msg: {}".format(msg['username')
+----------
 
-  # this will stop the consumer
-  rc_rmq.stop_consumer()
+## Setup & Usage
 
-# start consume messagre from queue with callback function
-rc_rmq.start_consume({
-  'queue': 'queue_name',
-  'routing_key: 'your_key',
-  'cb': callback_function
-})
+### Prerequisites
 
-# don't forget to close connection
-rc_rmq.disconnect()
-```
+-   RabbitMQ server running with the  `RegUsr`  exchange.
+    
+-   SQLite database for UID/GID storage.
+    
 
-### Account creation flowchart
-![Account creation flowchart](./account-creation-flow.png)
+### Configuration Steps
+
+1.  **Bind Queues to  `RegUsr`  Exchange**:  
+    Use these routing keys:
+    
+    -   `request<queuename>`
+        
+    -   `completed<queuename>`
+        
+    -   `verify<queuename>`  
+        _(Replace  `<queuename>`  with your queue’s name, e.g.,  `request_user_reg`)_
+        
+2.  **Deploy Agents**:
+    
+    -   Run the Web UI (`self_reg_app`) for user submissions.
+        
+    -   Execute  `create_account.py`  to process tasks (e.g., UID assignment).
+        
+3.  **Monitor Queues**:  
+    Use RabbitMQ’s management UI or CLI tools to check:
+    
+    -   `task_manager`  for workflow progress.
+        
+    -   `notify user`  for delivery status of emails/SMS.
+        
+
+----------
+
+## Error Handling
+
+-   Failures (e.g., duplicate email) are reported in the  `completed<queuename>`  message’s  `errmsg`  field.
+    
+-   The  `user reg event logger`  tracks all registration attempts. Check logs at  `/var/log/user_reg.log`.
+    
+
+----------
+
+## Example Workflow
+
+**Scenario**: A researcher registers via the Web UI.
+
+1.  Web UI sends  `request_researcher_reg`  with their details.
+    
+2.  System assigns UID/GID from SQLite.
+    
+3.  A  `verify_researcher_reg`  message ensures data is valid.
+    
+4.  On success:
+    
+    -   `completed_researcher_reg`  marks  `success: True`.
+        
+    -   `notify_researcher_reg`  triggers a confirmation email.
+        
+5.  On failure:
+    
+    -   `errmsg`  lists issues (e.g., "Email already exists").
+        
+
+----------
