@@ -49,12 +49,48 @@ This project automates user registration workflows at UAB using **RabbitMQ** to 
 
 ### Prerequisites
 
--   RabbitMQ server running with the  `RegUsr`  exchange.
+-   macOS
     
--   SQLite database for UID/GID storage.
+-   Homebrew
     
+-   Python 3.x
 
-### Configuration Steps
+### Install and Setup RabbitMQ
+
+```bash
+brew update
+brew install rabbitmq
+```
+
+### Add RabbitMQ to Your PATH
+
+```
+echo 'export PATH="/usr/local/sbin:$PATH"' >> ~/.zshrc
+source ~/.zshrc  # Reload your shell to apply changes
+```
+
+### Start RabbitMQ
+```
+brew services start rabbitmq
+```
+
+### Check RabbitMQ Status
+```
+rabbitmqctl status
+```
+
+### ccess the Management UI
+
+-   **URL**:  [http://localhost:15672](http://localhost:15672/)
+    
+-   **Credentials**:
+    
+    -   Username:  `guest`
+        
+    -   Password:  `guest`
+
+
+### WIP Configuration Steps
 
 1.  **Bind Queues to  `RegUsr`  Exchange**:  
     Use these routing keys:
